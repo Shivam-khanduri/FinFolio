@@ -1,8 +1,17 @@
-import React from 'react';
+import { useContext } from 'react';
+import { ThemeContext } from '../context/ThemeContext';
 import { useNavigate } from 'react-router-dom';
 
 const Navbar = () => {
   const navigate = useNavigate();
+  const { theme, setTheme } = useContext(ThemeContext);
+
+  const isLoggedIn = localStorage.getItem("isLoggedIn") === "true";
+
+  const handleLogout = () => {
+    localStorage.removeItem("isLoggedIn");
+    navigate(0);
+  };
 
   return (
     <header className="flex justify-between items-center p-6 shadow-sm bg-white">
@@ -14,34 +23,26 @@ const Navbar = () => {
       </h1>
 
       <nav className="space-x-4 flex items-center">
-        
         <button 
-          className="text-gray-700 hover:text-blue-600"
-          onClick={() => navigate('/')}
+          onClick={() => setTheme(theme === 'Light' ? 'Dark' : 'Light')}
+          className="px-4 py-2 text-sm bg-gray-200 rounded-xl hover:bg-gray-300 transition"
         >
-          Home
+          {theme === 'Light' ? 'Dark Mode' : 'Light Mode'}
         </button>
 
-        <button
-          onClick={() => navigate('/dashboard')}
-          className="text-gray-700 hover:text-blue-600"
-        >
-          Dashboard
-        </button>
-
-        <button
-          onClick={() => navigate('/stocks')}
-          className="text-gray-700 hover:text-blue-600"
-        >
-          Stocks
-        </button>
-
-        <button
-          onClick={() => navigate('/signup')}
-          className="px-4 py-2 text-sm bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition"
-        >
-          Sign Up
-        </button>
+        {/* Auth Buttons */}
+        {isLoggedIn ? (
+          <>
+            <button onClick={() => navigate('/dashboard')} className="px-4 py-2 text-sm bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition">Dashboard</button>
+            <button onClick={() => navigate('/profile')} className="px-4 py-2 text-sm bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition">Profile</button>
+            <button onClick={handleLogout} className="px-4 py-2 text-sm bg-gray-300 text-gray-700 rounded-xl hover:bg-gray-400 transition">Logout</button>
+          </>
+        ) : (
+          <>
+            <button onClick={() => navigate('/login')} className="px-4 py-2 text-sm bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition">Login</button>
+            <button onClick={() => navigate('/signup')} className="px-4 py-2 text-sm bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition">Sign Up</button>
+          </>
+        )}
       </nav>
     </header>
   );
