@@ -1,0 +1,103 @@
+import React, { useEffect, useState } from 'react';
+import Navbar from '../components/Navbar';
+
+const API_KEY = 'd1gkcghr01qn4ub7oiggd1gkcghr01qn4ub7oih0';
+const SYMBOLS = ['AAPL', 'GOOGL', 'TSLA', 'AMZN', 'NFLX'];
+
+const StocksPage = () => {
+  const [stocks, setStocks] = useState([]);
+  const [clickedStocks, setClickedStocks] = useState([]);
+
+  useEffect(() => {
+    const fetchStocks = async () => {
+      try {
+        const allData = await Promise.all(
+          SYMBOLS.map(async (symbol) => {
+            const [profileRes, quoteRes] = await Promise.all([
+              fetch(`https://finnhub.io/api/v1/stock/profile2?symbol=${symbol}&token=${API_KEY}`),
+              fetch(`https://finnhub.io/api/v1/quote?symbol=${symbol}&token=${API_KEY}`),
+            ]);
+
+            const profile = await profileRes.json();
+            const quote = await quoteRes.json();
+
+            return {
+              symbol,
+              name: profile.name || symbol,
+              price: quote.c,
+              change: quote.d,
+            };
+          })
+        );
+        setStocks(allData);
+      } catch (err) {
+        console.error('Error fetching stock data:', err);
+      }
+    };
+
+    fetchStocks();
+  }, []);
+
+  const addToWatchlist = (symbol) => {
+    const updatedClicked = [...clickedStocks, symbol];
+    setClickedStocks(updatedClicked);
+
+    const saved = JSON.parse(localStorage.getItem('watchlist')) || [];
+    const stockToAdd = stocks.find((s) => s.symbol === symbol);
+
+    if (stockToAdd && !saved.find((s) => s.symbol === symbol)) {
+      const updated = [...saved, stockToAdd];
+      localStorage.setItem('watchlist', JSON.stringify(updated));
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-gray-100">
+      <Navbar />
+      <div className="max-w-4xl mx-auto py-10 px-4">
+        <h1 className="text-3xl font-bold text-center text-blue-700 mb-6">
+          Stocks
+        </h1>
+
+        <div className="space-y-4">
+          {stocks.map((stock) => {
+            const isClicked = clickedStocks.includes(stock.symbol);
+            return (
+              <div
+                key={stock.symbol}
+                className="bg-blue-100 text-blue-900 rounded-xl shadow p-4 flex justify-between items-center"
+              >
+                <div>
+                  <h2 className="text-lg font-semibold">
+                    {stock.name} ({stock.symbol})
+                  </h2>
+                  <p
+                    className={`font-bold ${
+                      stock.change >= 0 ? 'text-green-600' : 'text-red-600'
+                    }`}
+                  >
+                    ${stock.price?.toFixed(2)} ({stock.change >= 0 ? '+' : ''}
+                    {stock.change?.toFixed(2)})
+                  </p>
+                </div>
+                <button
+                  disabled={isClicked}
+                  onClick={() => addToWatchlist(stock.symbol)}
+                  className={`px-4 py-2 rounded-lg transition ${
+                    isClicked
+                      ? 'bg-gray-400 cursor-not-allowed'
+                      : 'bg-blue-600 hover:bg-blue-700 text-white'
+                  }`}
+                >
+                  {isClicked ? 'Added' : 'Add to Watchlist'}
+                </button>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default StocksPage;

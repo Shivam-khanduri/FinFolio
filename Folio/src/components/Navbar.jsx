@@ -30,6 +30,13 @@ const Navbar = () => {
         </button>
 
         <button
+          onClick={() => navigate('/stocks')}
+          className="text-gray-700 hover:text-blue-600"
+        >
+          Stocks
+        </button>
+
+        <button
           onClick={() => navigate('/signup')}
           className="px-4 py-2 text-sm bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition"
         >
