@@ -14,6 +14,7 @@ const DashboardPage = () => {
           <button onClick={() => navigate('/dashboard')} className="text-left hover:bg-blue-700 p-2 rounded">Dashboard</button>
           <button onClick={() => navigate('/')} className="text-left hover:bg-blue-700 p-2 rounded">Home</button>
           <button onClick={() => { localStorage.removeItem("isLoggedIn"); navigate('/'); }} className="text-left hover:bg-blue-700 p-2 rounded">Logout</button>
+          <button onClick={() => navigate('/portfolio')} className="text-left hover:bg-blue-700 p-2 rounded">Portfolio</button>
         </nav>
       </aside>
 

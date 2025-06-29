@@ -8,6 +8,8 @@ import ProfilePage from './pages/ProfilePage';
 import StocksPage from './pages/StocksPage';
 import PrivateRoute from './utils/PrivateRoute';
 import ThemeProvider from './context/ThemeContext';
+import PortfolioPage from './pages/PortfolioPage';
+
 
 const App = () => {
   return (
@@ -20,6 +22,7 @@ const App = () => {
           <Route path="/dashboard" element={<PrivateRoute element={<DashboardPage />} />} />
           <Route path="/profile" element={<PrivateRoute element={<ProfilePage />} />} />
           <Route path="/stocks" element={<PrivateRoute element={<StocksPage />} />} />
+          <Route path="/portfolio" element={<PrivateRoute element={<PortfolioPage />} />} />
         </Routes>
       </Router>
     </ThemeProvider>
