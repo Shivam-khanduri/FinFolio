@@ -4,7 +4,7 @@ import Navbar from '../components/Navbar';
 
 const LoginPage = () => {
   const navigate = useNavigate();
-  const DUMMY_EMAIL = "user@example.com";
+  const DUMMY_EMAIL = "user@gmail.com";
   const DUMMY_PASSWORD = "password123";
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
