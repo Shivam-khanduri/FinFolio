@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import Navbar from '../components/Navbar';
+import Sidebar from '../components/Sidebar';
 
 const API_KEY = 'd1gkcghr01qn4ub7oiggd1gkcghr01qn4ub7oih0';
 const SYMBOLS = ['AAPL', 'GOOGL', 'TSLA', 'AMZN', 'NFLX'];
@@ -45,11 +45,14 @@ const StocksPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-white">
-      <Navbar />
-      <div className="max-w-4xl mx-auto py-10 px-4">
-        <h1 className="text-3xl font-bold text-center text-blue-700 mb-6">Stocks</h1>
-        <div className="space-y-4">
+    <div className="min-h-screen flex bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-white">
+      
+      <Sidebar />
+
+      <main className="flex-1 p-6">
+        <h1 className="text-3xl font-bold text-blue-700 mb-6">Stocks</h1>
+        
+        <div className="space-y-4 max-w-4xl">
           {stocks.map((stock) => {
             const isClicked = clickedStocks.includes(stock.symbol);
             return (
@@ -67,7 +70,7 @@ const StocksPage = () => {
             );
           })}
         </div>
-      </div>
+      </main>
     </div>
   );
 };

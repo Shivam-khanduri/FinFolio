@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import Sidebar from "../components/Sidebar";
 
 const Portfolio = () => {
   const [stocks, setStocks] = useState([]);
@@ -40,88 +41,95 @@ const Portfolio = () => {
   };
 
   return (
-    <div className="max-w-4xl mx-auto mt-20 p-6 bg-white rounded-xl shadow-md">
-      <h2 className="text-2xl font-semibold mb-4 text-gray-800">📊 Your Portfolio</h2>
+    <div className="min-h-screen flex bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-white">
 
-      <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-        <input
-          type="text"
-          name="symbol"
-          placeholder="Symbol (e.g. AAPL)"
-          value={form.symbol}
-          onChange={handleChange}
-          required
-          className="border rounded px-3 py-2"
-        />
-        <input
-          type="number"
-          name="shares"
-          placeholder="Shares"
-          value={form.shares}
-          onChange={handleChange}
-          required
-          className="border rounded px-3 py-2"
-        />
-        <input
-          type="number"
-          name="price"
-          placeholder="Price"
-          value={form.price}
-          onChange={handleChange}
-          required
-          className="border rounded px-3 py-2"
-        />
-        <button
-          type="submit"
-          className="md:col-span-3 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
-        >
-          {editingIndex !== null ? "Update Stock" : "Add Stock"}
-        </button>
-      </form>
+      <Sidebar />
 
-      <table className="w-full text-left border">
-        <thead className="bg-gray-100">
-          <tr>
-            <th className="p-2 border">Symbol</th>
-            <th className="p-2 border">Shares</th>
-            <th className="p-2 border">Price</th>
-            <th className="p-2 border">Total</th>
-            <th className="p-2 border">Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {stocks.length === 0 ? (
-            <tr>
-              <td colSpan="5" className="text-center p-4 text-gray-500">
-                No holdings yet.
-              </td>
-            </tr>
-          ) : (
-            stocks.map((stock, index) => (
-              <tr key={index}>
-                <td className="p-2 border">{stock.symbol}</td>
-                <td className="p-2 border">{stock.shares}</td>
-                <td className="p-2 border">${stock.price.toFixed(2)}</td>
-                <td className="p-2 border">${(stock.shares * stock.price).toFixed(2)}</td>
-                <td className="p-2 border">
-                  <button
-                    onClick={() => handleEdit(index)}
-                    className="text-blue-600 hover:underline mr-2"
-                  >
-                    Edit
-                  </button>
-                  <button
-                    onClick={() => handleDelete(index)}
-                    className="text-red-600 hover:underline"
-                  >
-                    Delete
-                  </button>
-                </td>
+      <main className="flex-1 p-6">
+        <h2 className="text-3xl font-bold mb-6 text-blue-600">📊 Your Portfolio</h2>
+
+        <div className="max-w-4xl mx-auto p-6 bg-white dark:bg-gray-800 rounded-xl shadow-md">
+          <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+            <input
+              type="text"
+              name="symbol"
+              placeholder="Symbol (e.g. AAPL)"
+              value={form.symbol}
+              onChange={handleChange}
+              required
+              className="border rounded px-3 py-2 dark:bg-gray-700 dark:text-white"
+            />
+            <input
+              type="number"
+              name="shares"
+              placeholder="Shares"
+              value={form.shares}
+              onChange={handleChange}
+              required
+              className="border rounded px-3 py-2 dark:bg-gray-700 dark:text-white"
+            />
+            <input
+              type="number"
+              name="price"
+              placeholder="Price"
+              value={form.price}
+              onChange={handleChange}
+              required
+              className="border rounded px-3 py-2 dark:bg-gray-700 dark:text-white"
+            />
+            <button
+              type="submit"
+              className="md:col-span-3 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+            >
+              {editingIndex !== null ? "Update Stock" : "Add Stock"}
+            </button>
+          </form>
+
+          <table className="w-full text-left border">
+            <thead className="bg-gray-100 dark:bg-gray-700">
+              <tr>
+                <th className="p-2 border">Symbol</th>
+                <th className="p-2 border">Shares</th>
+                <th className="p-2 border">Price</th>
+                <th className="p-2 border">Total</th>
+                <th className="p-2 border">Actions</th>
               </tr>
-            ))
-          )}
-        </tbody>
-      </table>
+            </thead>
+            <tbody>
+              {stocks.length === 0 ? (
+                <tr>
+                  <td colSpan="5" className="text-center p-4 text-gray-500">
+                    No holdings yet.
+                  </td>
+                </tr>
+              ) : (
+                stocks.map((stock, index) => (
+                  <tr key={index}>
+                    <td className="p-2 border">{stock.symbol}</td>
+                    <td className="p-2 border">{stock.shares}</td>
+                    <td className="p-2 border">${stock.price.toFixed(2)}</td>
+                    <td className="p-2 border">${(stock.shares * stock.price).toFixed(2)}</td>
+                    <td className="p-2 border">
+                      <button
+                        onClick={() => handleEdit(index)}
+                        className="text-blue-600 hover:underline mr-2"
+                      >
+                        Edit
+                      </button>
+                      <button
+                        onClick={() => handleDelete(index)}
+                        className="text-red-600 hover:underline"
+                      >
+                        Delete
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+      </main>
     </div>
   );
 };
