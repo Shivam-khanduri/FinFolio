@@ -1,7 +1,16 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import Sidebar from '../components/Sidebar';
+import { useNavigate } from 'react-router-dom';
 
 const DashboardPage = () => {
+  const navigate = useNavigate();
+  const [watchlistCount, setWatchlistCount] = useState(0);
+
+  useEffect(() => {
+    const saved = JSON.parse(localStorage.getItem("watchlist")) || [];
+    setWatchlistCount(saved.length);
+  }, []);
+
   return (
     <div className="min-h-screen flex bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-white">
       
@@ -19,15 +28,20 @@ const DashboardPage = () => {
             <h2 className="text-xl font-semibold mb-2">Today's Profit/Loss</h2>
             <p className="text-2xl font-bold text-green-500">+$220.50</p>
           </div>
-          <div className="bg-white dark:bg-gray-800 shadow rounded-2xl p-6">
+          <div
+            className="bg-white dark:bg-gray-800 shadow rounded-2xl p-6 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700"
+            onClick={() => navigate('/watchlist')}
+          >
             <h2 className="text-xl font-semibold mb-2">Watchlist Items</h2>
-            <p className="text-2xl font-bold">5</p>
+            <p className="text-2xl font-bold">{watchlistCount}</p>
           </div>
         </div>
 
         <div className="mt-8 bg-white dark:bg-gray-800 shadow rounded-2xl p-6">
           <h2 className="text-xl font-semibold mb-4">Portfolio Performance (Coming Soon)</h2>
-          <div className="h-48 flex items-center justify-center text-gray-400">Chart Component Placeholder</div>
+          <div className="h-48 flex items-center justify-center text-gray-400">
+            Chart Component Placeholder
+          </div>
         </div>
       </main>
     </div>
