@@ -24,7 +24,7 @@ const LandingPage = () => {
                 Get Started
               </button>
             )}
-            <button className="px-6 py-3 border border-blue-600 text-blue-600 rounded-xl hover:bg-blue-50 dark:hover:bg-gray-700">
+            <button onClick={()=> navigate('/aboutus')} className="px-6 py-3 border border-blue-600 text-blue-600 rounded-xl hover:bg-blue-50 dark:hover:bg-gray-700">
               Learn More
             </button>
           </div>

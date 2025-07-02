@@ -10,6 +10,7 @@ import PrivateRoute from './utils/PrivateRoute';
 import ThemeProvider from './context/ThemeContext';
 import PortfolioPage from './pages/PortfolioPage';
 import WatchlistPage from './pages/WatchlistPage';
+import AboutUsPage from './pages/AboutUsPage';
 
 
 const App = () => {
@@ -25,6 +26,7 @@ const App = () => {
           <Route path="/stocks" element={<PrivateRoute element={<StocksPage />} />} />
           <Route path="/portfolio" element={<PrivateRoute element={<PortfolioPage />} />} />
           <Route path="/watchlist" element={<PrivateRoute element={<WatchlistPage />} />} />
+          <Route path="/aboutus" element={<AboutUsPage />} />
         </Routes>
       </Router>
     </ThemeProvider>
