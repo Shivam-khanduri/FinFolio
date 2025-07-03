@@ -1,10 +1,40 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import Sidebar from "../components/Sidebar";
+import Notification from "../components/Notification";
 
 const Portfolio = () => {
   const [stocks, setStocks] = useState([]);
   const [form, setForm] = useState({ symbol: "", shares: "", price: "" });
   const [editingIndex, setEditingIndex] = useState(null);
+  const [alert, setAlert] = useState({ message: "", type: "success" });
+  const [watchlistStocks, setWatchlistStocks] = useState([]);
+
+  // ✅ Load user's portfolio holdings from localStorage
+  useEffect(() => {
+    const saved = JSON.parse(localStorage.getItem("portfolio")) || [];
+    setStocks(saved);
+  }, []);
+
+  // ✅ Save portfolio to localStorage on changes
+  useEffect(() => {
+    localStorage.setItem("portfolio", JSON.stringify(stocks));
+  }, [stocks]);
+
+  // ✅ Load Watchlist from localStorage initially
+  useEffect(() => {
+    const savedWatchlist = JSON.parse(localStorage.getItem("watchlist")) || [];
+    setWatchlistStocks(savedWatchlist);
+  }, []);
+
+  // ✅ Keep Watchlist refreshed automatically every 5 seconds
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const latestWatchlist = JSON.parse(localStorage.getItem("watchlist")) || [];
+      setWatchlistStocks(latestWatchlist);
+    }, 5000); // adjust interval as needed
+
+    return () => clearInterval(interval);
+  }, []);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -13,21 +43,30 @@ const Portfolio = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
+
+    if (!form.symbol.trim() || isNaN(form.shares) || isNaN(form.price)) {
+      setAlert({ message: "Please fill in all fields correctly.", type: "error" });
+      return;
+    }
+
     const updatedStock = {
       symbol: form.symbol.toUpperCase(),
       shares: parseFloat(form.shares),
       price: parseFloat(form.price),
     };
 
+    let updated;
     if (editingIndex !== null) {
-      const updated = [...stocks];
+      updated = [...stocks];
       updated[editingIndex] = updatedStock;
-      setStocks(updated);
       setEditingIndex(null);
+      setAlert({ message: "Stock updated successfully!", type: "success" });
     } else {
-      setStocks([...stocks, updatedStock]);
+      updated = [...stocks, updatedStock];
+      setAlert({ message: "Stock added successfully!", type: "success" });
     }
 
+    setStocks(updated);
     setForm({ symbol: "", shares: "", price: "" });
   };
 
@@ -37,11 +76,21 @@ const Portfolio = () => {
   };
 
   const handleDelete = (index) => {
-    setStocks(stocks.filter((_, i) => i !== index));
+    const updated = stocks.filter((_, i) => i !== index);
+    setStocks(updated);
+    setAlert({ message: "Stock deleted successfully!", type: "info" });
   };
 
   return (
     <div className="min-h-screen flex bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-white">
+      
+      {alert.message && (
+        <Notification
+          message={alert.message}
+          type={alert.type}
+          onClose={() => setAlert({ message: "", type: "success" })}
+        />
+      )}
 
       <Sidebar />
 
@@ -85,6 +134,7 @@ const Portfolio = () => {
             </button>
           </form>
 
+          {/* ✅ Portfolio Holdings Table */}
           <table className="w-full text-left border">
             <thead className="bg-gray-100 dark:bg-gray-700">
               <tr>
@@ -107,8 +157,8 @@ const Portfolio = () => {
                   <tr key={index}>
                     <td className="p-2 border">{stock.symbol}</td>
                     <td className="p-2 border">{stock.shares}</td>
-                    <td className="p-2 border">${stock.price.toFixed(2)}</td>
-                    <td className="p-2 border">${(stock.shares * stock.price).toFixed(2)}</td>
+                    <td className="p-2 border">₹{stock.price.toFixed(2)}</td>
+                    <td className="p-2 border">₹{(stock.shares * stock.price).toFixed(2)}</td>
                     <td className="p-2 border">
                       <button
                         onClick={() => handleEdit(index)}
@@ -128,6 +178,45 @@ const Portfolio = () => {
               )}
             </tbody>
           </table>
+
+          {/* ✅ Watchlist Section */}
+          <div className="mt-10">
+            <h3 className="text-2xl font-bold text-blue-600 mb-4">📈 Stocks Watchlist</h3>
+
+            {watchlistStocks.length === 0 ? (
+              <p className="text-gray-500">
+                Your watchlist is empty. Add stocks from the Stocks page.
+              </p>
+            ) : (
+              <table className="w-full text-left border">
+                <thead className="bg-gray-100 dark:bg-gray-700">
+                  <tr>
+                    <th className="p-2 border">Name</th>
+                    <th className="p-2 border">Symbol</th>
+                    <th className="p-2 border">Price</th>
+                    <th className="p-2 border">Change</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {watchlistStocks.map((stock, index) => (
+                    <tr key={index}>
+                      <td className="p-2 border">{stock.name}</td>
+                      <td className="p-2 border">{stock.symbol}</td>
+                      <td className="p-2 border">${stock.price?.toFixed(2)}</td>
+                      <td
+                        className={`p-2 border ${
+                          stock.change >= 0 ? "text-green-600" : "text-red-600"
+                        }`}
+                      >
+                        {stock.change >= 0 ? "+" : ""}
+                        {stock.change?.toFixed(2)}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+          </div>
         </div>
       </main>
     </div>
