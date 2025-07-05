@@ -27,6 +27,9 @@ const App = () => {
           <Route path="/portfolio" element={<PrivateRoute element={<PortfolioPage />} />} />
           <Route path="/watchlist" element={<PrivateRoute element={<WatchlistPage />} />} />
           <Route path="/aboutus" element={<AboutUsPage />} />
+
+          <Route path="/stocks" element={<StocksPage />} />
+        <Route path="/portfolio" element={<PortfolioPage />} />
         </Routes>
       </Router>
     </ThemeProvider>

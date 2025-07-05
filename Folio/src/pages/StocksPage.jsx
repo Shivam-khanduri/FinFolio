@@ -8,6 +8,7 @@ const StocksPage = () => {
   const [stocks, setStocks] = useState([]);
   const [clickedStocks, setClickedStocks] = useState([]);
 
+  // ✅ Fetch stock data from Finnhub
   useEffect(() => {
     const fetchStocks = async () => {
       try {
@@ -31,6 +32,7 @@ const StocksPage = () => {
     fetchStocks();
   }, []);
 
+  // ✅ Add stock to watchlist when button clicked
   const addToWatchlist = (symbol) => {
     const updatedClicked = [...clickedStocks, symbol];
     setClickedStocks(updatedClicked);
@@ -44,9 +46,14 @@ const StocksPage = () => {
     }
   };
 
+  // ✅ NEW - Keep watchlist in localStorage updated with latest prices
+  useEffect(() => {
+    const updatedWatchlist = stocks.filter((s) => clickedStocks.includes(s.symbol));
+    localStorage.setItem('watchlist', JSON.stringify(updatedWatchlist));
+  }, [stocks, clickedStocks]);
+
   return (
     <div className="min-h-screen flex bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-white">
-      
       <Sidebar />
 
       <main className="flex-1 p-6">
@@ -63,7 +70,11 @@ const StocksPage = () => {
                     ${stock.price?.toFixed(2)} ({stock.change >= 0 ? '+' : ''}{stock.change?.toFixed(2)})
                   </p>
                 </div>
-                <button disabled={isClicked} onClick={() => addToWatchlist(stock.symbol)} className={`px-4 py-2 rounded-lg transition ${isClicked ? 'bg-gray-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700 text-white'}`}>
+                <button
+                  disabled={isClicked}
+                  onClick={() => addToWatchlist(stock.symbol)}
+                  className={`px-4 py-2 rounded-lg transition ${isClicked ? 'bg-gray-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700 text-white'}`}
+                >
                   {isClicked ? 'Added' : 'Add to Watchlist'}
                 </button>
               </div>

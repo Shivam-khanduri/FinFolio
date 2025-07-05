@@ -4,19 +4,32 @@ import Navbar from '../components/Navbar';
 
 const LoginPage = () => {
   const navigate = useNavigate();
-  const DUMMY_EMAIL = "user@gmail.com";
-  const DUMMY_PASSWORD = "password123";
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loginError, setLoginError] = useState("");
 
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
-    if (email === DUMMY_EMAIL && password === DUMMY_PASSWORD) {
-      localStorage.setItem("isLoggedIn", "true");
-      navigate('/dashboard');
-    } else {
-      setLoginError("Invalid credentials");
+
+    try {
+      const res = await fetch('http://localhost:5000/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password })
+      });
+
+      const data = await res.json();
+
+      if (res.ok) {
+        localStorage.setItem('isLoggedIn', 'true');
+        localStorage.setItem('token', data.token);
+        navigate('/dashboard');
+      } else {
+        setLoginError(data.message || 'Login failed');
+      }
+    } catch (err) {
+      console.error(err);
+      setLoginError('Login failed');
     }
   };
 
@@ -26,21 +39,30 @@ const LoginPage = () => {
       <div className="flex flex-1 items-center justify-center px-4">
         <div className="max-w-md w-full bg-white dark:bg-gray-800 shadow-lg rounded-2xl p-8 space-y-6">
           <h2 className="text-3xl font-bold text-center text-blue-600">Welcome Back</h2>
-          <p className="text-center text-gray-500 dark:text-gray-400">Log in to your FinFolio account</p>
           <form className="space-y-4" onSubmit={handleLogin}>
             <div>
               <label className="block mb-1">Email</label>
-              <input type="email" placeholder="you@example.com" className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white" value={email} onChange={(e) => setEmail(e.target.value)} required />
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                className="w-full p-2 border rounded"
+              />
             </div>
             <div>
               <label className="block mb-1">Password</label>
-              <input type="password" placeholder="••••••••" className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white" value={password} onChange={(e) => setPassword(e.target.value)} required />
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                className="w-full p-2 border rounded"
+              />
             </div>
-            <button type="submit" className="w-full bg-blue-600 text-white py-3 rounded-xl hover:bg-blue-700">Log In</button>
+            <button type="submit" className="w-full bg-blue-600 text-white py-2 rounded">Log In</button>
           </form>
-          {loginError && (
-            <p className="text-center text-red-500 text-sm">{loginError}</p>
-          )}
+          {loginError && <p className="text-red-500 text-center">{loginError}</p>}
         </div>
       </div>
     </div>
