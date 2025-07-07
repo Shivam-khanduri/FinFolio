@@ -2,88 +2,169 @@ import React, { useEffect, useState } from "react";
 import Sidebar from "../components/Sidebar";
 import Notification from "../components/Notification";
 
+const API_KEY = 'd1gkcghr01qn4ub7oiggd1gkcghr01qn4ub7oih0';
+
+const stockOptions = [
+  { name: "Apple Inc", symbol: "AAPL" },
+  { name: "Alphabet Inc", symbol: "GOOGL" },
+  { name: "Tesla Inc", symbol: "TSLA" },
+  { name: "Amazon.com Inc", symbol: "AMZN" },
+  { name: "Netflix Inc", symbol: "NFLX" },
+];
+
 const Portfolio = () => {
-  const [stocks, setStocks] = useState([]);
-  const [form, setForm] = useState({ symbol: "", shares: "", price: "" });
-  const [editingIndex, setEditingIndex] = useState(null);
+  const [portfolio, setPortfolio] = useState({});
+  const [liveData, setLiveData] = useState([]);
   const [alert, setAlert] = useState({ message: "", type: "success" });
-  const [watchlistStocks, setWatchlistStocks] = useState([]);
+  const [newStock, setNewStock] = useState({ name: '', symbol: '', shares: '', price: '' });
+  const [formError, setFormError] = useState('');
+  const [suggestions, setSuggestions] = useState([]);
 
-  // ✅ Load user's portfolio holdings from localStorage
   useEffect(() => {
-    const saved = JSON.parse(localStorage.getItem("portfolio")) || [];
-    setStocks(saved);
+    const saved = JSON.parse(localStorage.getItem("portfolio")) || {};
+    setPortfolio(saved);
   }, []);
 
-  // ✅ Save portfolio to localStorage on changes
   useEffect(() => {
-    localStorage.setItem("portfolio", JSON.stringify(stocks));
-  }, [stocks]);
+    localStorage.setItem("portfolio", JSON.stringify(portfolio));
+  }, [portfolio]);
 
-  // ✅ Load Watchlist from localStorage initially
   useEffect(() => {
-    const savedWatchlist = JSON.parse(localStorage.getItem("watchlist")) || [];
-    setWatchlistStocks(savedWatchlist);
-  }, []);
+    const fetchData = async () => {
+      try {
+        const data = await Promise.all(
+          stockOptions.map(async ({ symbol, name }) => {
+            const [profileRes, quoteRes] = await Promise.all([
+              fetch(`https://finnhub.io/api/v1/stock/profile2?symbol=${symbol}&token=${API_KEY}`),
+              fetch(`https://finnhub.io/api/v1/quote?symbol=${symbol}&token=${API_KEY}`),
+            ]);
+            const profile = await profileRes.json();
+            const quote = await quoteRes.json();
+            return {
+              symbol,
+              name: profile.name || name || symbol,
+              livePrice: quote.c,
+              change: quote.d,
+            };
+          })
+        );
+        setLiveData(data);
+      } catch (err) {
+        console.error("Failed to fetch live prices", err);
+      }
+    };
 
-  // ✅ Keep Watchlist refreshed automatically every 5 seconds
-  useEffect(() => {
-    const interval = setInterval(() => {
-      const latestWatchlist = JSON.parse(localStorage.getItem("watchlist")) || [];
-      setWatchlistStocks(latestWatchlist);
-    }, 5000); // adjust interval as needed
-
+    fetchData();
+    const interval = setInterval(fetchData, 10000);
     return () => clearInterval(interval);
   }, []);
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setForm((prev) => ({ ...prev, [name]: value }));
+  const updateShares = (symbol, value) => {
+    setPortfolio((prev) => ({
+      ...prev,
+      [symbol]: {
+        shares: parseFloat(value) || 0,
+      },
+    }));
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
+  const handleDelete = (symbol) => {
+    const confirmDelete = window.confirm(`Are you sure you want to remove ${symbol} from your portfolio?`);
+    if (!confirmDelete) return;
 
-    if (!form.symbol.trim() || isNaN(form.shares) || isNaN(form.price)) {
-      setAlert({ message: "Please fill in all fields correctly.", type: "error" });
+    const updated = { ...portfolio };
+    delete updated[symbol];
+    setPortfolio(updated);
+    setAlert({ message: `${symbol} removed from portfolio`, type: "info" });
+    setTimeout(() => setAlert({ message: "", type: "success" }), 3000);
+  };
+
+  const handlePay = (symbol) => {
+    const confirmPay = window.confirm(`Are you sure you want to proceed with payment for ${symbol}?`);
+    if (!confirmPay) return;
+
+    alert(`Payment initiated for ${symbol}`);
+  };
+
+  const handleNameChange = (e) => {
+    const input = e.target.value;
+    setNewStock({ ...newStock, name: input, symbol: '', price: '' });
+
+    const matches = stockOptions.filter((stock) =>
+      stock.name.toLowerCase().includes(input.toLowerCase())
+    );
+    setSuggestions(input ? matches : []);
+  };
+
+  const handleSuggestionClick = async (stock) => {
+    try {
+      const res = await fetch(`https://finnhub.io/api/v1/quote?symbol=${stock.symbol}&token=${API_KEY}`);
+      const data = await res.json();
+
+      setNewStock({
+        name: stock.name,
+        symbol: stock.symbol,
+        shares: '',
+        price: data.c.toFixed(2),
+      });
+      setSuggestions([]);
+      setFormError('');
+    } catch {
+      setFormError("Failed to fetch live price.");
+    }
+  };
+
+  const handleAddStock = async () => {
+    const { symbol, shares, price } = newStock;
+    setFormError('');
+
+    if (!symbol || !shares || !price) {
+      setFormError("All fields are required.");
       return;
     }
 
-    const updatedStock = {
-      symbol: form.symbol.toUpperCase(),
-      shares: parseFloat(form.shares),
-      price: parseFloat(form.price),
-    };
+    try {
+      const res = await fetch(`https://finnhub.io/api/v1/stock/profile2?symbol=${symbol}&token=${API_KEY}`);
+      const data = await res.json();
 
-    let updated;
-    if (editingIndex !== null) {
-      updated = [...stocks];
-      updated[editingIndex] = updatedStock;
-      setEditingIndex(null);
-      setAlert({ message: "Stock updated successfully!", type: "success" });
-    } else {
-      updated = [...stocks, updatedStock];
-      setAlert({ message: "Stock added successfully!", type: "success" });
+      if (!data.name) {
+        setFormError("Invalid stock symbol. Please check and try again.");
+        return;
+      }
+
+      setPortfolio((prev) => ({
+        ...prev,
+        [symbol]: {
+          shares: parseFloat(shares) || 0,
+        },
+      }));
+
+      setLiveData((prev) => [
+        ...prev,
+        {
+          symbol,
+          name: data.name,
+          livePrice: parseFloat(price) || 0,
+          change: 0,
+        },
+      ]);
+
+      setNewStock({ name: '', symbol: '', shares: '', price: '' });
+      setAlert({ message: `${symbol} added to portfolio`, type: "success" });
+      setTimeout(() => setAlert({ message: "", type: "success" }), 3000);
+    } catch (err) {
+      console.error(err);
+      setFormError("Error validating stock. Please try again later.");
     }
-
-    setStocks(updated);
-    setForm({ symbol: "", shares: "", price: "" });
   };
 
-  const handleEdit = (index) => {
-    setForm(stocks[index]);
-    setEditingIndex(index);
-  };
-
-  const handleDelete = (index) => {
-    const updated = stocks.filter((_, i) => i !== index);
-    setStocks(updated);
-    setAlert({ message: "Stock deleted successfully!", type: "info" });
-  };
+  const totalPortfolioValue = liveData.reduce((sum, stock) => {
+    const shares = portfolio[stock.symbol]?.shares || 0;
+    return sum + shares * stock.livePrice;
+  }, 0);
 
   return (
     <div className="min-h-screen flex bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-white">
-      
       {alert.message && (
         <Notification
           message={alert.message}
@@ -95,128 +176,121 @@ const Portfolio = () => {
       <Sidebar />
 
       <main className="flex-1 p-6">
-        <h2 className="text-3xl font-bold mb-6 text-blue-600">📊 Your Portfolio</h2>
+        <h2 className="text-3xl font-bold mb-2 text-blue-600">📊 Your Portfolio</h2>
 
-        <div className="max-w-4xl mx-auto p-6 bg-white dark:bg-gray-800 rounded-xl shadow-md">
-          <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-            <input
-              type="text"
-              name="symbol"
-              placeholder="Symbol (e.g. AAPL)"
-              value={form.symbol}
-              onChange={handleChange}
-              required
-              className="border rounded px-3 py-2 dark:bg-gray-700 dark:text-white"
-            />
+        <p className="text-xl font-bold text-green-600 mb-6">
+          💰 Total Portfolio Value: ₹{totalPortfolioValue.toFixed(2)}
+        </p>
+
+        {/* Stock Add Form */}
+        <div className="max-w-5xl mx-auto mb-6 p-4 bg-white dark:bg-gray-800 rounded-xl shadow-md flex flex-col space-y-4">
+          <div className="flex flex-col md:flex-row md:space-x-4 space-y-2 md:space-y-0">
+            <div className="relative w-full">
+              <input
+                type="text"
+                placeholder="Search stock name (e.g. Apple)"
+                value={newStock.name}
+                onChange={handleNameChange}
+                className="w-full px-3 py-2 border rounded focus:outline-none focus:ring focus:border-blue-400 dark:bg-gray-700"
+              />
+              {suggestions.length > 0 && (
+                <ul className="absolute z-10 w-full bg-white border rounded shadow dark:bg-gray-800 max-h-48 overflow-y-auto">
+                  {suggestions.map((stock) => (
+                    <li
+                      key={stock.symbol}
+                      onClick={() => handleSuggestionClick(stock)}
+                      className="px-3 py-2 hover:bg-blue-100 dark:hover:bg-gray-700 cursor-pointer"
+                    >
+                      {stock.name} ({stock.symbol})
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
             <input
               type="number"
-              name="shares"
               placeholder="Shares"
-              value={form.shares}
-              onChange={handleChange}
-              required
-              className="border rounded px-3 py-2 dark:bg-gray-700 dark:text-white"
+              value={newStock.shares}
+              onChange={(e) => setNewStock({ ...newStock, shares: e.target.value })}
+              className="flex-1 px-3 py-2 border rounded focus:outline-none focus:ring focus:border-blue-400 dark:bg-gray-700"
             />
             <input
               type="number"
-              name="price"
               placeholder="Price"
-              value={form.price}
-              onChange={handleChange}
-              required
-              className="border rounded px-3 py-2 dark:bg-gray-700 dark:text-white"
+              value={newStock.price}
+              onChange={(e) => setNewStock({ ...newStock, price: e.target.value })}
+              className="flex-1 px-3 py-2 border rounded focus:outline-none focus:ring focus:border-blue-400 dark:bg-gray-700"
             />
-            <button
-              type="submit"
-              className="md:col-span-3 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
-            >
-              {editingIndex !== null ? "Update Stock" : "Add Stock"}
-            </button>
-          </form>
+          </div>
+          <button
+            onClick={handleAddStock}
+            className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition"
+          >
+            Add Stock
+          </button>
+          {formError && (
+            <p className="text-red-600 text-sm">{formError}</p>
+          )}
+        </div>
 
-          {/* ✅ Portfolio Holdings Table */}
-          <table className="w-full text-left border">
-            <thead className="bg-gray-100 dark:bg-gray-700">
+        {/* Portfolio Table */}
+        <div className="max-w-5xl mx-auto p-6 bg-white dark:bg-gray-800 rounded-xl shadow-md overflow-x-auto">
+          <table className="w-full text-left border mb-6">
+            <thead className="bg-blue-600 text-white">
               <tr>
-                <th className="p-2 border">Symbol</th>
-                <th className="p-2 border">Shares</th>
-                <th className="p-2 border">Price</th>
-                <th className="p-2 border">Total</th>
-                <th className="p-2 border">Actions</th>
+                <th className="p-3 border font-bold uppercase">Symbol</th>
+                <th className="p-3 border font-bold uppercase">Name</th>
+                <th className="p-3 border font-bold uppercase">Shares</th>
+                <th className="p-3 border font-bold uppercase">Live Price</th>
+                <th className="p-3 border font-bold uppercase">Total</th>
+                <th className="p-3 border font-bold uppercase">Actions</th>
+                <th className="p-3 border font-bold uppercase">Payment</th>
               </tr>
             </thead>
             <tbody>
-              {stocks.length === 0 ? (
-                <tr>
-                  <td colSpan="5" className="text-center p-4 text-gray-500">
-                    No holdings yet.
-                  </td>
-                </tr>
-              ) : (
-                stocks.map((stock, index) => (
-                  <tr key={index}>
-                    <td className="p-2 border">{stock.symbol}</td>
-                    <td className="p-2 border">{stock.shares}</td>
-                    <td className="p-2 border">₹{stock.price.toFixed(2)}</td>
-                    <td className="p-2 border">₹{(stock.shares * stock.price).toFixed(2)}</td>
+              {liveData.map((stock) => {
+                const { symbol, name, livePrice } = stock;
+                const shares = portfolio[symbol]?.shares || 0;
+                const total = shares * livePrice;
+
+                return (
+                  <tr key={symbol}>
+                    <td className="p-2 border">{symbol}</td>
+                    <td className="p-2 border">{name}</td>
+                    <td className="p-2 border">
+                      <input
+                        type="number"
+                        value={shares}
+                        onChange={(e) => updateShares(symbol, e.target.value)}
+                        className="w-20 px-2 py-1 rounded bg-gray-100 dark:bg-gray-700"
+                      />
+                    </td>
+                    <td className="p-2 border text-blue-600 font-semibold">
+                      ₹{livePrice?.toFixed(2)}
+                    </td>
+                    <td className="p-2 border">₹{total.toFixed(2)}</td>
                     <td className="p-2 border">
                       <button
-                        onClick={() => handleEdit(index)}
-                        className="text-blue-600 hover:underline mr-2"
-                      >
-                        Edit
-                      </button>
-                      <button
-                        onClick={() => handleDelete(index)}
+                        onClick={() => handleDelete(symbol)}
                         className="text-red-600 hover:underline"
                       >
                         Delete
                       </button>
                     </td>
+                    <td className="p-2 border">
+                      <button
+                        onClick={() => handlePay(symbol)}
+                        className="bg-green-600 text-white px-3 py-1 rounded hover:bg-green-700 transition"
+                      >
+                        Pay
+                      </button>
+                    </td>
                   </tr>
-                ))
-              )}
+                );
+              })}
             </tbody>
           </table>
-
-          {/* ✅ Watchlist Section */}
-          <div className="mt-10">
-            <h3 className="text-2xl font-bold text-blue-600 mb-4">📈 Stocks Watchlist</h3>
-
-            {watchlistStocks.length === 0 ? (
-              <p className="text-gray-500">
-                Your watchlist is empty. Add stocks from the Stocks page.
-              </p>
-            ) : (
-              <table className="w-full text-left border">
-                <thead className="bg-gray-100 dark:bg-gray-700">
-                  <tr>
-                    <th className="p-2 border">Name</th>
-                    <th className="p-2 border">Symbol</th>
-                    <th className="p-2 border">Price</th>
-                    <th className="p-2 border">Change</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {watchlistStocks.map((stock, index) => (
-                    <tr key={index}>
-                      <td className="p-2 border">{stock.name}</td>
-                      <td className="p-2 border">{stock.symbol}</td>
-                      <td className="p-2 border">${stock.price?.toFixed(2)}</td>
-                      <td
-                        className={`p-2 border ${
-                          stock.change >= 0 ? "text-green-600" : "text-red-600"
-                        }`}
-                      >
-                        {stock.change >= 0 ? "+" : ""}
-                        {stock.change?.toFixed(2)}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            )}
-          </div>
+          <p className="text-sm text-gray-500">Edit shares. Total is based on live price.</p>
         </div>
       </main>
     </div>
