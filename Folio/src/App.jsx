@@ -11,6 +11,7 @@ import ThemeProvider from './context/ThemeContext';
 import PortfolioPage from './pages/PortfolioPage';
 import WatchlistPage from './pages/WatchlistPage';
 import AboutUsPage from './pages/AboutUsPage';
+import PaymentPage from './pages/PaymentPage';
 
 
 const App = () => {
@@ -27,6 +28,7 @@ const App = () => {
           <Route path="/portfolio" element={<PrivateRoute element={<PortfolioPage />} />} />
           <Route path="/watchlist" element={<PrivateRoute element={<WatchlistPage />} />} />
           <Route path="/aboutus" element={<AboutUsPage />} />
+          <Route path="/payment" element={<PrivateRoute element={<PaymentPage />} />} /> 
 
           <Route path="/stocks" element={<StocksPage />} />
         <Route path="/portfolio" element={<PortfolioPage />} />

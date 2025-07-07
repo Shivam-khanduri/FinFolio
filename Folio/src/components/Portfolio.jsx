@@ -12,7 +12,7 @@ const stockOptions = [
   { name: "Netflix Inc", symbol: "NFLX" },
 ];
 
-const Portfolio = () => {
+const Portfolio = ({ onPay }) => {
   const [portfolio, setPortfolio] = useState({});
   const [liveData, setLiveData] = useState([]);
   const [alert, setAlert] = useState({ message: "", type: "success" });
@@ -77,13 +77,6 @@ const Portfolio = () => {
     setPortfolio(updated);
     setAlert({ message: `${symbol} removed from portfolio`, type: "info" });
     setTimeout(() => setAlert({ message: "", type: "success" }), 3000);
-  };
-
-  const handlePay = (symbol) => {
-    const confirmPay = window.confirm(`Are you sure you want to proceed with payment for ${symbol}?`);
-    if (!confirmPay) return;
-
-    alert(`Payment initiated for ${symbol}`);
   };
 
   const handleNameChange = (e) => {
@@ -182,7 +175,7 @@ const Portfolio = () => {
           💰 Total Portfolio Value: ₹{totalPortfolioValue.toFixed(2)}
         </p>
 
-        {/* Stock Add Form */}
+        {/* Add Stock Form */}
         <div className="max-w-5xl mx-auto mb-6 p-4 bg-white dark:bg-gray-800 rounded-xl shadow-md flex flex-col space-y-4">
           <div className="flex flex-col md:flex-row md:space-x-4 space-y-2 md:space-y-0">
             <div className="relative w-full">
@@ -228,9 +221,7 @@ const Portfolio = () => {
           >
             Add Stock
           </button>
-          {formError && (
-            <p className="text-red-600 text-sm">{formError}</p>
-          )}
+          {formError && <p className="text-red-600 text-sm">{formError}</p>}
         </div>
 
         {/* Portfolio Table */}
@@ -265,9 +256,7 @@ const Portfolio = () => {
                         className="w-20 px-2 py-1 rounded bg-gray-100 dark:bg-gray-700"
                       />
                     </td>
-                    <td className="p-2 border text-blue-600 font-semibold">
-                      ₹{livePrice?.toFixed(2)}
-                    </td>
+                    <td className="p-2 border text-blue-600 font-semibold">₹{livePrice?.toFixed(2)}</td>
                     <td className="p-2 border">₹{total.toFixed(2)}</td>
                     <td className="p-2 border">
                       <button
@@ -279,7 +268,15 @@ const Portfolio = () => {
                     </td>
                     <td className="p-2 border">
                       <button
-                        onClick={() => handlePay(symbol)}
+                        onClick={() =>
+                          onPay?.({
+                            symbol,
+                            name,
+                            shares,
+                            livePrice,
+                            total,
+                          })
+                        }
                         className="bg-green-600 text-white px-3 py-1 rounded hover:bg-green-700 transition"
                       >
                         Pay
