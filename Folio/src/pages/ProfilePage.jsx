@@ -1,188 +1,162 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import Sidebar from '../components/Sidebar';
 
-const ProfilePage = () => {
-  const [activeTab, setActiveTab] = useState('account');
-  const [fullName, setFullName] = useState('John Doe');
-  const [email, setEmail] = useState('user@example.com');
-  const [phone, setPhone] = useState('+91 9876543210');
-  const [username, setUsername] = useState('johndoe');
-  const [dob, setDob] = useState('');
-  const [password, setPassword] = useState('');
-  const [twoFA, setTwoFA] = useState(false);
-  const [currency, setCurrency] = useState('USD');
-  const [timezone, setTimezone] = useState('GMT');
-  const [language, setLanguage] = useState('English');
-  const [theme, setTheme] = useState('Light');
-  const [notificationEmail, setNotificationEmail] = useState(true);
-  const [notificationPush, setNotificationPush] = useState(false);
-  const [notificationSMS, setNotificationSMS] = useState(false);
-  const [portfolioGrouping, setPortfolioGrouping] = useState('sector');
-  const [dataRefresh, setDataRefresh] = useState('Real-time');
-  const [plan, setPlan] = useState('Free');
+const countries = ['India', 'USA', 'Canada', 'Germany', 'France', 'Australia', 'UK'];
 
-  const handleSave = (e) => {
+const ProfilePage = () => {
+  const [activeTab, setActiveTab] = useState('profile');
+
+  const [fullName, setFullName] = useState('');
+  const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
+  const [username, setUsername] = useState('');
+  const [usernameAvailable, setUsernameAvailable] = useState(true);
+  const [dob, setDob] = useState('');
+  const [country, setCountry] = useState('');
+  const [message, setMessage] = useState('');
+
+  const [oldPassword, setOldPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [passwordMsg, setPasswordMsg] = useState('');
+  const [isOldPasswordValid, setIsOldPasswordValid] = useState(false);
+
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const res = await fetch('http://localhost:5000/api/auth/profile', {
+          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+        });
+        const data = await res.json();
+        setFullName(data.name || '');
+        setEmail(data.email || '');
+        setPhone(data.phone || '');
+        setUsername(data.username || '');
+        setDob(data.dob || '');
+        setCountry(data.country || '');
+      } catch (err) {
+        console.error('Failed to load profile:', err);
+      }
+    };
+    fetchProfile();
+  }, []);
+
+  const checkUsername = async (value) => {
+    setUsername(value);
+    if (!value) return;
+    try {
+      const res = await fetch(`http://localhost:5000/api/auth/check-username/${value}`);
+      const data = await res.json();
+      setUsernameAvailable(data.available);
+    } catch (err) {
+      console.error('Username check failed');
+    }
+  };
+
+  const handleProfileSave = async (e) => {
     e.preventDefault();
-    alert('Profile updated successfully!');
+    const updatedData = { name: fullName, email, phone, username, dob, country };
+    try {
+      const res = await fetch('http://localhost:5000/api/auth/profile', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${localStorage.getItem('token')}`,
+        },
+        body: JSON.stringify(updatedData),
+      });
+      const data = await res.json();
+      setMessage(res.ok ? 'Profile updated successfully!' : data.message || 'Update failed');
+    } catch (err) {
+      setMessage('An error occurred.');
+    }
+  };
+
+  const handleOldPasswordVerify = async () => {
+    try {
+      const res = await fetch('http://localhost:5000/api/auth/verify-password', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${localStorage.getItem('token')}`,
+        },
+        body: JSON.stringify({ oldPassword }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setIsOldPasswordValid(false);
+        setPasswordMsg(data.message || 'Old password incorrect');
+      } else {
+        setIsOldPasswordValid(true);
+        setPasswordMsg('Old password verified. You can now set a new password.');
+      }
+    } catch (err) {
+      setPasswordMsg('Error verifying old password.');
+    }
+  };
+
+  const handlePasswordChange = async (e) => {
+    e.preventDefault();
+    if (newPassword !== confirmPassword) {
+      setPasswordMsg("Passwords do not match");
+      return;
+    }
+    try {
+      const res = await fetch('http://localhost:5000/api/auth/change-password', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${localStorage.getItem('token')}`,
+        },
+        body: JSON.stringify({ oldPassword, newPassword }),
+      });
+      const data = await res.json();
+      setPasswordMsg(res.ok ? 'Password changed successfully!' : data.message || 'Password update failed');
+    } catch (err) {
+      setPasswordMsg('An error occurred while changing password.');
+    }
   };
 
   return (
     <div className="min-h-screen flex bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-white">
-      
       <Sidebar />
-
       <main className="flex-1 p-6">
-        <h2 className="text-3xl font-bold text-blue-600 mb-6">Profile Settings</h2>
-        
-        <div className="flex flex-col md:flex-row">
-          
-          {/* Tabs Sidebar */}
-          <div className="w-64 bg-white dark:bg-gray-800 shadow rounded-2xl p-4 space-y-4 h-fit">
-            {['account', 'security', 'preferences', 'portfolio', 'notifications', 'billing', 'accountMgmt'].map((tab) => (
-              <button
-                key={tab}
-                className={`block w-full text-left p-2 rounded transition ${
-                  activeTab === tab ? 'bg-blue-600 text-white font-semibold' : 'hover:bg-gray-100 dark:hover:bg-gray-700'
-                }`}
-                onClick={() => setActiveTab(tab)}
-              >
-                {tab === 'account' && 'Account Info'}
-                {tab === 'security' && 'Security'}
-                {tab === 'preferences' && 'Preferences'}
-                {tab === 'portfolio' && 'Portfolio'}
-                {tab === 'notifications' && 'Notifications'}
-                {tab === 'billing' && 'Billing'}
-                {tab === 'accountMgmt' && 'Account Management'}
-              </button>
-            ))}
-          </div>
+        <h2 className="text-3xl font-bold text-blue-600 mb-6">Account Settings</h2>
 
-          {/* Form Content */}
-          <div className="flex-1 ml-6 max-w-3xl bg-white dark:bg-gray-800 shadow-lg rounded-2xl p-8 space-y-6">
-            <form className="space-y-6" onSubmit={handleSave}>
-
-              {activeTab === 'account' && (
-                <div className="space-y-4">
-                  <div>
-                    <label className="font-semibold">Full Name</label>
-                    <input type="text" className="input w-full dark:bg-gray-700 dark:text-white" value={fullName} onChange={(e) => setFullName(e.target.value)} required />
-                  </div>
-                  <div>
-                    <label className="font-semibold">Email Address</label>
-                    <input type="email" className="input w-full dark:bg-gray-700 dark:text-white" value={email} onChange={(e) => setEmail(e.target.value)} required />
-                  </div>
-                  <div>
-                    <label className="font-semibold">Phone Number</label>
-                    <input type="tel" className="input w-full dark:bg-gray-700 dark:text-white" value={phone} onChange={(e) => setPhone(e.target.value)} />
-                  </div>
-                  <div>
-                    <label className="font-semibold">Username</label>
-                    <input type="text" className="input w-full dark:bg-gray-700 dark:text-white" value={username} onChange={(e) => setUsername(e.target.value)} required />
-                  </div>
-                  <div>
-                    <label className="font-semibold">Date of Birth</label>
-                    <input type="date" className="input w-full dark:bg-gray-700 dark:text-white" value={dob} onChange={(e) => setDob(e.target.value)} />
-                  </div>
-                </div>
-              )}
-
-              {activeTab === 'security' && (
-                <div className="space-y-4">
-                  <div>
-                    <label className="font-semibold">New Password</label>
-                    <input type="password" className="input w-full dark:bg-gray-700 dark:text-white" value={password} onChange={(e) => setPassword(e.target.value)} />
-                  </div>
-                  <label className="flex items-center space-x-2">
-                    <input type="checkbox" checked={twoFA} onChange={() => setTwoFA(!twoFA)} />
-                    <span>Enable Two-Factor Authentication</span>
-                  </label>
-                </div>
-              )}
-
-              {activeTab === 'preferences' && (
-                <div className="space-y-4">
-                  <div>
-                    <label className="font-semibold">Currency Preference</label>
-                    <select className="input w-full dark:bg-gray-700 dark:text-white" value={currency} onChange={(e) => setCurrency(e.target.value)}>
-                      <option value="USD">USD</option>
-                      <option value="INR">INR</option>
-                      <option value="EUR">EUR</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="font-semibold">Time Zone</label>
-                    <select className="input w-full dark:bg-gray-700 dark:text-white" value={timezone} onChange={(e) => setTimezone(e.target.value)}>
-                      <option value="GMT">GMT</option>
-                      <option value="IST">IST (India Standard Time)</option>
-                      <option value="EST">EST (Eastern Standard Time)</option>
-                      <option value="PST">PST (Pacific Standard Time)</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="font-semibold">Language</label>
-                    <select className="input w-full dark:bg-gray-700 dark:text-white" value={language} onChange={(e) => setLanguage(e.target.value)}>
-                      <option value="English">English</option>
-                      <option value="Hindi">Hindi</option>
-                      <option value="Spanish">Spanish</option>
-                      <option value="French">French</option>
-                    </select>
-                  </div>
-                </div>
-              )}
-
-              {activeTab === 'portfolio' && (
-                <div className="space-y-4">
-                  <div>
-                    <label className="font-semibold">Grouping Preferences</label>
-                    <select className="input w-full dark:bg-gray-700 dark:text-white" value={portfolioGrouping} onChange={(e) => setPortfolioGrouping(e.target.value)}>
-                      <option value="sector">Group by Sector</option>
-                      <option value="marketcap">Group by Market Cap</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="font-semibold">Data Refresh</label>
-                    <select className="input w-full dark:bg-gray-700 dark:text-white" value={dataRefresh} onChange={(e) => setDataRefresh(e.target.value)}>
-                      <option value="Real-time">Real-time Data</option>
-                      <option value="Delayed">Delayed Data</option>
-                    </select>
-                  </div>
-                </div>
-              )}
-
-              {activeTab === 'notifications' && (
-                <div className="space-y-4">
-                  <label className="flex items-center space-x-2">
-                    <input type="checkbox" checked={notificationEmail} onChange={() => setNotificationEmail(!notificationEmail)} />
-                    <span>Email Notifications</span>
-                  </label>
-                  <label className="flex items-center space-x-2">
-                    <input type="checkbox" checked={notificationPush} onChange={() => setNotificationPush(!notificationPush)} />
-                    <span>Push Notifications</span>
-                  </label>
-                  <label className="flex items-center space-x-2">
-                    <input type="checkbox" checked={notificationSMS} onChange={() => setNotificationSMS(!notificationSMS)} />
-                    <span>SMS Alerts</span>
-                  </label>
-                </div>
-              )}
-
-              {activeTab === 'billing' && (
-                <div className="space-y-4">
-                  <p className="font-semibold">Current Plan: <strong>{plan}</strong></p>
-                  <button type="button" className="px-4 py-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700">Upgrade Plan</button>
-                </div>
-              )}
-
-              {activeTab === 'accountMgmt' && (
-                <div className="space-y-4">
-                  <button type="button" className="px-4 py-2 bg-red-600 text-white rounded-xl hover:bg-red-700">Delete Account</button>
-                </div>
-              )}
-
-              <button type="submit" className="w-full bg-blue-600 text-white py-3 rounded-xl hover:bg-blue-700">Save Changes</button>
-            </form>
-          </div>
+        <div className="mb-6 flex space-x-4">
+          <button onClick={() => setActiveTab('profile')} className={`px-4 py-2 rounded ${activeTab === 'profile' ? 'bg-blue-600 text-white' : 'bg-gray-200'}`}>Profile</button>
+          <button onClick={() => setActiveTab('security')} className={`px-4 py-2 rounded ${activeTab === 'security' ? 'bg-blue-600 text-white' : 'bg-gray-200'}`}>Change Password</button>
         </div>
+
+        {activeTab === 'profile' && (
+          <form onSubmit={handleProfileSave} className="space-y-6 max-w-3xl bg-white dark:bg-gray-800 p-6 rounded-xl shadow-lg">
+            {message && <p className="text-green-600">{message}</p>}
+            <input type="text" value={fullName} onChange={(e) => setFullName(e.target.value)} required placeholder="Full Name" className="input w-full" />
+            <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required placeholder="Email" className="input w-full" />
+            <input type="text" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="Phone" className="input w-full" />
+            <div>
+              <input type="text" value={username} onChange={(e) => checkUsername(e.target.value)} placeholder="Username" className={`input w-full ${username && !usernameAvailable ? 'border-red-500' : ''}`} />
+              {username && !usernameAvailable && <p className="text-sm text-red-600">Username already taken</p>}
+            </div>
+            <input type="date" value={dob} onChange={(e) => setDob(e.target.value)} placeholder="DOB" className="input w-full" />
+            <select value={country} onChange={(e) => setCountry(e.target.value)} className="input w-full">
+              <option value="">Select a country</option>
+              {countries.map((c) => <option key={c} value={c}>{c}</option>)}
+            </select>
+            <button type="submit" className="w-full bg-blue-600 text-white py-3 rounded-xl hover:bg-blue-700">Save Changes</button>
+          </form>
+        )}
+
+        {activeTab === 'security' && (
+          <form onSubmit={handlePasswordChange} className="space-y-6 max-w-xl bg-white dark:bg-gray-800 p-6 rounded-xl shadow-lg">
+            {passwordMsg && <p className="text-green-600">{passwordMsg}</p>}
+            <input type="password" value={oldPassword} onChange={(e) => setOldPassword(e.target.value)} required placeholder="Current Password" className="input w-full" />
+            <button type="button" onClick={handleOldPasswordVerify} className="w-full bg-indigo-500 text-white py-2 rounded hover:bg-indigo-600">Verify Old Password</button>
+            <input type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} required placeholder="New Password" className="input w-full" disabled={!isOldPasswordValid} />
+            <input type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} required placeholder="Confirm New Password" className="input w-full" disabled={!isOldPasswordValid} />
+            <button type="submit" className="w-full bg-blue-600 text-white py-3 rounded-xl hover:bg-blue-700" disabled={!isOldPasswordValid}>Change Password</button>
+          </form>
+        )}
       </main>
     </div>
   );

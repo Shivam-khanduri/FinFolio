@@ -47,7 +47,7 @@ const LoginPage = () => {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                className="w-full p-2 border rounded"
+                className="w-full p-2 border rounded bg-white dark:bg-gray-700 text-black dark:text-white"
               />
             </div>
             <div>
@@ -57,7 +57,7 @@ const LoginPage = () => {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
-                className="w-full p-2 border rounded"
+                className="w-full p-2 border rounded bg-white dark:bg-gray-700 text-black dark:text-white"
               />
             </div>
             <button type="submit" className="w-full bg-blue-600 text-white py-2 rounded">Log In</button>
@@ -70,3 +70,4 @@ const LoginPage = () => {
 };
 
 export default LoginPage;
+  
