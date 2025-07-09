@@ -13,6 +13,7 @@ const ProfilePage = () => {
   const [usernameAvailable, setUsernameAvailable] = useState(true);
   const [dob, setDob] = useState('');
   const [country, setCountry] = useState('');
+  const [theme, setTheme] = useState('light');
   const [message, setMessage] = useState('');
 
   const [oldPassword, setOldPassword] = useState('');
@@ -34,6 +35,8 @@ const ProfilePage = () => {
         setUsername(data.username || '');
         setDob(data.dob || '');
         setCountry(data.country || '');
+        setTheme(data.theme || 'light');
+        document.documentElement.classList.toggle('dark', data.theme === 'dark');
       } catch (err) {
         console.error('Failed to load profile:', err);
       }
@@ -55,7 +58,7 @@ const ProfilePage = () => {
 
   const handleProfileSave = async (e) => {
     e.preventDefault();
-    const updatedData = { name: fullName, email, phone, username, dob, country };
+    const updatedData = { name: fullName, email, phone, username, dob, country, theme };
     try {
       const res = await fetch('http://localhost:5000/api/auth/profile', {
         method: 'PUT',
@@ -66,7 +69,12 @@ const ProfilePage = () => {
         body: JSON.stringify(updatedData),
       });
       const data = await res.json();
-      setMessage(res.ok ? 'Profile updated successfully!' : data.message || 'Update failed');
+      if (res.ok) {
+        setMessage('Profile updated successfully!');
+        document.documentElement.classList.toggle('dark', theme === 'dark');
+      } else {
+        setMessage(data.message || 'Update failed');
+      }
     } catch (err) {
       setMessage('An error occurred.');
     }
@@ -117,6 +125,31 @@ const ProfilePage = () => {
     }
   };
 
+  const handleDeleteAccount = async () => {
+    const confirmDelete = window.confirm("Are you sure you want to delete your account? This action cannot be undone.");
+    if (!confirmDelete) return;
+
+    try {
+      const res = await fetch('http://localhost:5000/api/auth/delete-account', {
+        method: 'DELETE',
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('token')}`
+        }
+      });
+
+      const data = await res.json();
+      if (res.ok) {
+        alert('Account deleted successfully');
+        localStorage.clear();
+        window.location.href = '/signup';
+      } else {
+        alert(data.message || 'Failed to delete account');
+      }
+    } catch (err) {
+      alert('Error deleting account');
+    }
+  };
+
   return (
     <div className="min-h-screen flex bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-white">
       <Sidebar />
@@ -143,6 +176,10 @@ const ProfilePage = () => {
               <option value="">Select a country</option>
               {countries.map((c) => <option key={c} value={c}>{c}</option>)}
             </select>
+            <select value={theme} onChange={(e) => setTheme(e.target.value)} className="input w-full">
+              <option value="light">Light Theme</option>
+              <option value="dark">Dark Theme</option>
+            </select>
             <button type="submit" className="w-full bg-blue-600 text-white py-3 rounded-xl hover:bg-blue-700">Save Changes</button>
           </form>
         )}
@@ -155,6 +192,11 @@ const ProfilePage = () => {
             <input type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} required placeholder="New Password" className="input w-full" disabled={!isOldPasswordValid} />
             <input type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} required placeholder="Confirm New Password" className="input w-full" disabled={!isOldPasswordValid} />
             <button type="submit" className="w-full bg-blue-600 text-white py-3 rounded-xl hover:bg-blue-700" disabled={!isOldPasswordValid}>Change Password</button>
+
+            <hr className="my-4 border-t border-gray-300 dark:border-gray-600" />
+            <button type="button" onClick={handleDeleteAccount} className="w-full bg-red-600 text-white py-3 rounded-xl hover:bg-red-700">
+              Delete Account
+            </button>
           </form>
         )}
       </main>

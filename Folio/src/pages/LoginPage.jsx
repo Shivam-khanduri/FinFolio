@@ -4,18 +4,17 @@ import Navbar from '../components/Navbar';
 
 const LoginPage = () => {
   const navigate = useNavigate();
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [loginError, setLoginError] = useState("");
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [loginError, setLoginError] = useState('');
 
   const handleLogin = async (e) => {
     e.preventDefault();
-
     try {
       const res = await fetch('http://localhost:5000/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password })
+        body: JSON.stringify({ email, password }),
       });
 
       const data = await res.json();
@@ -60,9 +59,20 @@ const LoginPage = () => {
                 className="w-full p-2 border rounded bg-white dark:bg-gray-700 text-black dark:text-white"
               />
             </div>
-            <button type="submit" className="w-full bg-blue-600 text-white py-2 rounded">Log In</button>
+            <button type="submit" className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700 transition">
+              Log In
+            </button>
           </form>
           {loginError && <p className="text-red-500 text-center">{loginError}</p>}
+          <p className="text-center text-sm text-gray-600 dark:text-gray-300">
+            Don’t have an account?{' '}
+            <span
+              onClick={() => navigate('/signup')}
+              className="text-blue-600 hover:underline cursor-pointer"
+            >
+              Sign Up
+            </span>
+          </p>
         </div>
       </div>
     </div>
@@ -70,4 +80,3 @@ const LoginPage = () => {
 };
 
 export default LoginPage;
-  
