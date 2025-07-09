@@ -7,6 +7,8 @@ const SignupPage = () => {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [dob, setDob] = useState("");
+  const [phone, setPhone] = useState("");
   const [signupError, setSignupError] = useState("");
 
   const handleSignup = async (e) => {
@@ -16,7 +18,7 @@ const SignupPage = () => {
       const res = await fetch('http://localhost:5000/api/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, email, password })
+        body: JSON.stringify({ name, email, password, dob, phone })
       });
 
       const data = await res.json();
@@ -48,7 +50,7 @@ const SignupPage = () => {
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 required
-                className="w-full p-2 border rounded"
+                className="w-full p-2 border rounded bg-white dark:bg-gray-700 text-black dark:text-white"
               />
             </div>
             <div>
@@ -58,7 +60,27 @@ const SignupPage = () => {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                className="w-full p-2 border rounded"
+                className="w-full p-2 border rounded bg-white dark:bg-gray-700 text-black dark:text-white"
+              />
+            </div>
+            <div>
+              <label className="block mb-1">Phone Number</label>
+              <input
+                type="tel"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                required
+                className="w-full p-2 border rounded bg-white dark:bg-gray-700 text-black dark:text-white"
+              />
+            </div>
+            <div>
+              <label className="block mb-1">Date of Birth</label>
+              <input
+                type="date"
+                value={dob}
+                onChange={(e) => setDob(e.target.value)}
+                required
+                className="w-full p-2 border rounded bg-white dark:bg-gray-700 text-black dark:text-white"
               />
             </div>
             <div>
@@ -68,7 +90,7 @@ const SignupPage = () => {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
-                className="w-full p-2 border rounded"
+                className="w-full p-2 border rounded bg-white dark:bg-gray-700 text-black dark:text-white"
               />
             </div>
             <button type="submit" className="w-full bg-blue-600 text-white py-2 rounded">Sign Up</button>
