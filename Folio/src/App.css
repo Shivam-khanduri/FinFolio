@@ -1,3 +1,11 @@
+/* Remove default spacing around the entire page */
+body, html {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+
 #root {
   max-width: 1280px;
   margin: 0 auto;

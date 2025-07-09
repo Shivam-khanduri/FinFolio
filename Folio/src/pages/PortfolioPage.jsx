@@ -16,7 +16,7 @@ const PortfolioPage = () => {
   };
 
   return (
-    <div className="p-4">
+    <div className="">
       <Portfolio mergeSymbols={symbolsToMerge} onPay={handlePay} />
 
       {/* Global Pay Button (optional) */}
