@@ -5,6 +5,7 @@ require('dotenv').config();
 
 const authRoutes = require('./routes/auth.cjs');
 const reviewRoutes = require('./routes/review.cjs');
+const portfolioRoutes = require("./routes/portfolio.routes.cjs");
 
 const app = express();
 app.use(express.json());
@@ -22,3 +23,4 @@ mongoose.connect(process.env.MONGO_URI)
 // API Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/reviews', reviewRoutes); 
+app.use("/api/portfolio", portfolioRoutes);
