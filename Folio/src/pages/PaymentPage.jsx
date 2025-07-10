@@ -22,14 +22,28 @@ const PaymentPage = () => {
 
   const total = (stock.livePrice * stock.shares).toFixed(2);
 
+  // const handlePayment = (e) => {
+  //   e.preventDefault();
+  //   setProcessing(true);
+  //   setTimeout(() => {
+  //     alert(`Payment of ₹${total} for ${stock.symbol} completed!`);
+  //     navigate("/");
+  //   }, 1500);
+  // };
+
   const handlePayment = (e) => {
-    e.preventDefault();
-    setProcessing(true);
-    setTimeout(() => {
-      alert(`Payment of ₹${total} for ${stock.symbol} completed!`);
-      navigate("/");
-    }, 1500);
-  };
+  e.preventDefault();
+  setProcessing(true);
+  setTimeout(() => {
+    // Update localStorage portfolio
+    const existing = JSON.parse(localStorage.getItem("userPortfolio")) || [];
+    const updated = [...existing, stock];
+    localStorage.setItem("userPortfolio", JSON.stringify(updated));
+    alert(`Payment of $${total} for ${stock.symbol} completed!`);
+    navigate("/portfolio", { state: { newStock: stock } }); // navigate to portfolio to reflect update
+  }, 1500);
+};
+
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100 dark:bg-gray-900 px-4">
@@ -41,8 +55,8 @@ const PaymentPage = () => {
         <div className="bg-gray-100 dark:bg-gray-700 rounded-lg p-4 mb-6 text-sm text-gray-700 dark:text-gray-200">
           <p><strong>Stock:</strong> {stock.name} ({stock.symbol})</p>
           <p><strong>Shares:</strong> {stock.shares}</p>
-          <p><strong>Live Price:</strong> ₹{stock.livePrice}</p>
-          <p><strong>Total:</strong> ₹{total}</p>
+          <p><strong>Live Price:</strong> ${stock.livePrice}</p>
+          <p><strong>Total:</strong> ${total}</p>
         </div>
 
         <form onSubmit={handlePayment} className="space-y-5">
@@ -112,7 +126,7 @@ const PaymentPage = () => {
                 : "bg-green-600 hover:bg-green-700"
             }`}
           >
-            {processing ? "Processing..." : `Pay ₹${total}`}
+            {processing ? "Processing..." : `Pay $${total}`}
           </button>
         </form>
       </div>
