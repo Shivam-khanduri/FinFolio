@@ -1,4 +1,4 @@
-const Portfolio = require('../models/Portfolio.cjs');
+const Portfolio = require('../models/portfolio.cjs');
 
 // Get all stocks for a user
 const getPortfolio = async (req, res) => {
