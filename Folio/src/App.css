@@ -1,6 +1,6 @@
 /* Remove default spacing around the entire page */
 body, html {
-  margin: 0;
+  margin: 0 ;
   padding: 0;
   box-sizing: border-box;
 }
@@ -47,4 +47,4 @@ body, html {
 
 .read-the-docs {
   color: #888;
-}
+ }

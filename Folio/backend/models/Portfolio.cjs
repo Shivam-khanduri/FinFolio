@@ -1,11 +1,12 @@
-const mongoose = require("mongoose");
+const mongoose = require('mongoose');
 
-const PortfolioSchema = new mongoose.Schema({
+const portfolioSchema = new mongoose.Schema({
+  userName: String,
   name: String,
   symbol: String,
   shares: Number,
   livePrice: Number,
-  userName: String, // <-- important to tie portfolio to user
+  avgPrice: Number,
 });
 
-module.exports = mongoose.model("Portfolio", PortfolioSchema);
+module.exports = mongoose.model('Portfolio', portfolioSchema);

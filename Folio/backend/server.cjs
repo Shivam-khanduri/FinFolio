@@ -1,26 +1,32 @@
 const express = require('express');
-const mongoose = require('mongoose');
 const cors = require('cors');
-require('dotenv').config();
-
+const mongoose = require('mongoose');
+const dotenv = require('dotenv');
 const authRoutes = require('./routes/auth.cjs');
-const reviewRoutes = require('./routes/review.cjs');
-const portfolioRoutes = require("./routes/portfolio.routes.cjs");
+const portfolioRoutes = require('./routes/portfolio.routes.cjs');
+
+dotenv.config();
 
 const app = express();
-app.use(express.json());
+
 app.use(cors());
+app.use(express.json());
 
-// Connect to MongoDB
-mongoose.connect(process.env.MONGO_URI)
-  .then(() => {
-    console.log('MongoDB connected');
-    const PORT = process.env.PORT || 5000;
-    app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
-  })
-  .catch((err) => console.error('MongoDB connection error:', err));
-
-// API Routes
+// ✅ Mount routes with proper '/api' prefixes
 app.use('/api/auth', authRoutes);
-app.use('/api/reviews', reviewRoutes); 
-app.use("/api/portfolio", portfolioRoutes);
+app.use('/api/portfolio', portfolioRoutes);
+
+// ✅ Connect to MongoDB
+mongoose
+  .connect(process.env.MONGO_URI, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+  })
+  .then(() => console.log('MongoDB connected'))
+  .catch((err) => console.log('MongoDB connection error:', err));
+
+// ✅ Start the server
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
+});

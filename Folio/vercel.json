@@ -1,0 +1,26 @@
+{
+  "version": 2,
+  "builds": [
+    {
+      "src": "backend/index.js",
+      "use": "@vercel/node"
+    },
+    {
+      "src": "Folio/vite.config.js",
+      "use": "@vercel/static-build",
+      "config": {
+        "distDir": "Folio/dist"
+      }
+    }
+  ],
+  "routes": [
+    {
+      "src": "/api/(.*)",
+      "dest": "backend/index.js"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "Folio/dist/index.html"
+    }
+  ]
+}
